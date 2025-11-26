@@ -1,0 +1,70 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import OneHotEncoder
+
+iris = load_iris()
+X = iris.data
+y = iris.target.reshape(-1, 1)
+
+encoder = OneHotEncoder(sparse_output=False)
+y = encoder.fit_transform(y)
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+np.random.seed(42)
+W1 = np.random.randn(4, 6)
+b1 = np.zeros((1, 6))
+W2 = np.random.randn(6, 3)
+b2 = np.zeros((1, 3))
+
+def relu(x): return np.maximum(0, x)
+def relu_derivative(x): return (x > 0) * 1
+def softmax(x):
+    exp = np.exp(x - np.max(x, axis=1, keepdims=True))
+    return exp / np.sum(exp, axis=1, keepdims=True)
+
+lr = 0.0008       # smaller LR → better curved graph
+epochs = 600
+loss_values = []
+
+for epoch in range(epochs):
+    z1 = np.dot(X_train, W1) + b1
+    a1 = relu(z1)
+    z2 = np.dot(a1, W2) + b2
+    a2 = softmax(z2)
+
+    loss = -np.mean(np.sum(y_train * np.log(a2 + 1e-9), axis=1))
+    loss_values.append(loss)
+
+    error = a2 - y_train
+    dW2 = np.dot(a1.T, error)
+    db2 = np.sum(error, axis=0, keepdims=True)
+
+    da1 = np.dot(error, W2.T)
+    dz1 = da1 * relu_derivative(a1)
+    dW1 = np.dot(X_train.T, dz1)
+    db1 = np.sum(dz1, axis=0, keepdims=True)
+
+    W2 -= lr * dW2
+    b2 -= lr * db2
+    W1 -= lr * dW1
+    b1 -= lr * db1
+
+z1 = np.dot(X_test, W1) + b1
+a1 = relu(z1)
+z2 = np.dot(a1, W2) + b2
+pred = softmax(z2)
+accuracy = np.mean(np.argmax(pred, axis=1) == np.argmax(y_test, axis=1))
+print(f"Model Accuracy: {accuracy*100:.2f}%")
+
+plt.figure(figsize=(8,5))
+plt.plot(range(1, epochs+1), loss_values, color='blue', label="Cross-Entropy Loss")
+plt.ylim(min(loss_values) - 0.05, max(loss_values) + 0.1)   # force graph to show curve
+plt.title("Loss Curve of ANN on Iris Dataset")
+plt.xlabel("Epochs")
+plt.ylabel("Loss")
+plt.legend()
+plt.grid(True)
+plt.show()
