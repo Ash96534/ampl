@@ -1,0 +1,45 @@
+import random
+import time
+
+# Define 2x2 grid
+grid = {
+    "A": random.choice(["Dirty", "Clean"]),
+    "B": random.choice(["Dirty", "Clean"]),
+    "C": random.choice(["Dirty", "Clean"]),
+    "D": random.choice(["Dirty", "Clean"])
+}
+
+agent_pos = "A"
+
+moves = {
+    "A": ["B", "C"],
+    "B": ["A", "D"],
+    "C": ["A", "D"],
+    "D": ["B", "C"]
+}
+
+print("Initial Grid State:")
+for room, state in grid.items():
+    print(room, ":", state)
+print("\nAgent starting at:", agent_pos)
+
+steps = 0
+
+while "Dirty" in grid.values():
+    steps += 1
+    print(f"\nStep {steps} → Agent in Room {agent_pos}")
+    print("Status:", grid[agent_pos])
+
+    if grid[agent_pos] == "Dirty":
+        print("Action: CLEAN")
+        grid[agent_pos] = "Clean"
+    else:
+        next_pos = random.choice(moves[agent_pos])
+        print("Action: MOVE to", next_pos)
+        agent_pos = next_pos
+
+print("\nFinal Grid State:")
+for room, state in grid.items():
+    print(room, ":", state)
+
+print("\nTotal Steps Taken:", steps)
